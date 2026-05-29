@@ -1,631 +1,254 @@
-#include <Arduino.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_ST7789.h>
-#include <SPI.h>
+#include <LiquidCrystal_I2C.h>
 #include <Wire.h>
-#include <DFRobotDFPlayerMini.h> 
-
-
-
-#define TFT_CS   7
-#define TFT_DC   1
-#define TFT_RST  0  
-
-DFRobotDFPlayerMini myDFPlayer ; 
-Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
-
+#include <ezButton.h>
+const int BUZZ_PIN = 10;
+ezButton buttonw(0);
+ezButton buttonr(1);
 int buttonwstate = 3;
 int buttonrstate = 3;
 int compteur = 0;
-int mp3Busy = 3;
-int choixMenu = 0;
 
-void IRAM_ATTR boutonB() {
-    ets_printf("Boutton Bl pressé\n");
-    buttonwstate = 0;
-
-    // Code de la fonction
-}
-void IRAM_ATTR boutonR() {
-    ets_printf("Boutton Ro pressé\n");
-    buttonrstate = 0;
-    // Code de la fonction
-}
+LiquidCrystal_I2C lcd(0x27, 16, 2); 
+//LiquidCrystal_I2C lcd(0x3F, 16, 2); 
 
 void setup() {
-Serial.begin(115200);
-    Serial1.begin(9600,SERIAL_8N1, 3,2);
-    pinMode(9, INPUT);
-    pinMode(5, INPUT_PULLUP);
-    pinMode(10, INPUT_PULLUP);
-    attachInterrupt(5, boutonB, FALLING);
-    attachInterrupt(10, boutonR, FALLING);
-    myDFPlayer.begin(Serial1) ;
-    printf("DFRobot DFPlayer Mini Demo\n");
-    printf("Initializing DFPlayer ... (May take 3~5 seconds)\n");
-    delay(5000);
-    printf("DFPlayer Mini online.\n");
+  Serial.begin(9600);
+  pinMode(BUZZ_PIN, OUTPUT);
+  buttonw.setDebounceTime(50);
+  buttonr.setDebounceTime(50);
+
 }
 
 void loop() {
-  Menu1();
+  buttonw.loop();
+  buttonr.loop();
+  Menu();
 }
 
-void Menu1(){
-  tft.init(76, 284);
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(70, 10);
-  tft.print("Wake Up Eva");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Toilette Matin: Bt Bl");
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 50);
-  tft.print("Suivant: Bt Ro");
-  choixMenu = 1;
+void Menu(){
+  buttonw.loop();
+  buttonr.loop();
 
-while ((buttonrstate != 0 ) && (buttonwstate != 0)){
-  delay(100);
+ lcd.init(); 
+ lcd.backlight();
+  lcd.setCursor(2, 0);            
+  lcd.print("Wake Up Eva");          
+  lcd.setCursor(0, 1);            
+  lcd.print("Normal:Bl Sbs:Ro"); 
+  while ((buttonrstate != 0 ) && (buttonwstate != 0)){
+      buttonw.loop();
+      buttonr.loop();
+      buttonrstate = buttonr.getState();
+      buttonwstate = buttonw.getState();
+
   }
-   if(buttonwstate == 0){
-    buttonrstate = 3;
-    buttonwstate = 3;
-     ProgL1();
-     }
-   if(buttonrstate == 0){
-   buttonrstate = 3;
-   buttonwstate = 3;
-   Menu2();
+   if(buttonw.isPressed()){
+      ProgSimple();
+   }
+
+   if(buttonr.isPressed()){
+   ProgL1();
    }
 }
-
-void Menu2(){
-  tft.init(76, 284);
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(70, 10);
-  tft.print("Wake Up Eva");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Lavage Dents Bt Bl");
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 50);
-  tft.print("Suivant: Bt Ro");
-  choixMenu = 2;
-
-while ((buttonrstate != 0 ) && (buttonwstate != 0)){
-  delay(100);
-  }
-   if(buttonwstate == 0){
-      buttonrstate = 3;
-      buttonwstate = 3;
-     ProgDents1();
-     }
-   if(buttonrstate == 0){
-    buttonrstate = 3;
-    buttonwstate = 3;
-    Menu1();
-   }
-}
-
-
 
 void ProgL1(){ 
-
+  buttonw.loop();
+  buttonr.loop();
   int retour_choix = 0;
-  while ( retour_choix != 1 ){
-  tft.init(76, 284);
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 1");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Deshabille Toi");
-  myDFPlayer.playFolder(2, 1);
-  delay(60000);
+while ( retour_choix != 1 ){
+  lcd.clear();
+  lcd.backlight();      
+  lcd.setCursor(0, 0);            
+  lcd.print("Etape 1"); 
+  lcd.setCursor(0, 1);            
+  lcd.print("Deshabille Toi");         
+  delay(120000);
   retour_choix = choix();
   }
-  ProgL2();
+ProgL2();
+
 }
 
 void ProgL2(){
+  buttonw.loop();
+  buttonr.loop();
   int retour_choix = 0;
 while ( retour_choix != 1 ){
-  tft.init(76, 284);
- 
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 2");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Lave Toi");
-  myDFPlayer.playFolder(2, 2);
-  delay(60000);
+  lcd.clear();
+  lcd.backlight();         
+  lcd.setCursor(0, 0);            
+  lcd.print("Etape 2"); 
+  lcd.setCursor(0, 1);            
+  lcd.print("Lave Toi");         
+  delay(120000);
   retour_choix = choix();
   }
 ProgL3();
 }
 
 void ProgL3(){
+  buttonw.loop();
+  buttonr.loop();
   int retour_choix = 0;
 while ( retour_choix != 1 ){
-  tft.init(76, 284);
- 
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 3");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Essuie Toi");
-  myDFPlayer.playFolder(2, 3);
-  delay(30000);
+  lcd.clear();
+  lcd.backlight();         
+  lcd.setCursor(0, 0);            
+  lcd.print("Etape 3"); 
+  lcd.setCursor(0, 1);            
+  lcd.print("Essuie Toi");         
+  delay(120000);
   retour_choix = choix();
   }
 ProgL4();
 }
 
 void ProgL4(){
+  buttonw.loop();
+  buttonr.loop();
   int retour_choix = 0;
 while ( retour_choix != 1 ){
-  tft.init(76, 284);
- 
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 4");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Mets ton slip/boxer");
-  myDFPlayer.playFolder(2, 4);
-  delay(30000);
+  lcd.clear();
+  lcd.backlight();          
+  lcd.setCursor(0, 0);            
+  lcd.print("Etape 4"); 
+  lcd.setCursor(0, 1);            
+  lcd.print("Mets ta culotte");
+  delay(120000);
   retour_choix = choix();
   }
 ProgL5();
 }
 
 void ProgL5(){
+  buttonw.loop();
+  buttonr.loop();
   int retour_choix = 0;
 while ( retour_choix != 1 ){
-  tft.init(76, 284);
- 
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 5");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Mets ton haut");
-  myDFPlayer.playFolder(2, 5);
-  delay(30000);
+  lcd.clear();
+  lcd.backlight();        
+  lcd.setCursor(0, 0);            
+  lcd.print("Etape 5"); 
+  lcd.setCursor(0, 1);            
+  lcd.print("Mets ton Tee-Shirt");         
+  delay(120000);
   retour_choix = choix();
   }
 ProgL6();
 }
 
 void ProgL6(){
+  buttonw.loop();
+  buttonr.loop();
   int retour_choix = 0;
 while ( retour_choix != 1 ){
-  tft.init(76, 284);
- 
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 6");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("tes chaussettes");
-  myDFPlayer.playFolder(2, 6); 
-  delay(30000);
+  lcd.clear();
+  lcd.backlight();       
+  lcd.setCursor(0, 0);            
+  lcd.print("Etape 6"); 
+  lcd.setCursor(0, 1);            
+  lcd.print("Mets tes chaussettes");         
+  delay(120000);
   retour_choix = choix();
   }
 ProgL7();
 }
 
 void ProgL7(){
+  buttonw.loop();
+  buttonr.loop();
   int retour_choix = 0;
 while ( retour_choix != 1 ){
-  tft.init(76, 284);
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 7");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Mets ton bas");
-  myDFPlayer.playFolder(2, 7);
-  delay(30000);
-  retour_choix = choix();
-  }
-  myDFPlayer.playFolder(2, 8);
-  mp3Busy = digitalRead(9);
-   while (mp3Busy == LOW){
-     mp3Busy = digitalRead(9);
-     printf("lecture\n");
-     delay(100);
-   }
-      printf("Sortie lecture\n");
-ProgFin();
-}
-
-void ProgDents1(){ 
-
-  int retour_choix = 0;
-  while ( retour_choix != 1 ){
-  tft.init(76, 284);
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 1");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Met le dentifrice");
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(5, 50);
-  tft.print("Sur ta brosse a dents");
-  myDFPlayer.playFolder(3, 1);
-  delay(15000);
-  retour_choix = choix();
-  }
-  ProgDents2();
-}
-
-void ProgDents2(){
-  int retour_choix = 0;
-  tft.init(76, 284);
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 2");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Lavage dents");
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 50);
-  tft.print("Haut en premier");
-
-  myDFPlayer.playFolder(3, 21);
-  delay(100);
-     mp3Busy = digitalRead(9);
-   while (mp3Busy == LOW){
-     mp3Busy = digitalRead(9);
-     printf("lecture dents 1\n");
-     delay(100);
-   }
-      printf("Sortie lecture dents 1\n");
-
-  myDFPlayer.playFolder(3, 20);
-  delay(100);
-     mp3Busy = digitalRead(9);
-   while (mp3Busy == LOW){
-     mp3Busy = digitalRead(9);
-     printf("lecture dents 2\n");
-     delay(100);
-   }
-     printf("Sortie lecture dents 2\n");
-
-  tft.init(76, 284);
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 3");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Lavage dents Haut");
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 50);
-  tft.print("Maintenant Derriere");
-  myDFPlayer.playFolder(3, 22);
-       delay(100);
-     mp3Busy = digitalRead(9);
-   while (mp3Busy == LOW){
-     mp3Busy = digitalRead(9);
-     printf("lecture dents 1\n");
-     delay(100);
-   }
-      printf("Sortie lecture dents 1\n");
-
-  myDFPlayer.playFolder(3, 20);
-  delay(100);
-     mp3Busy = digitalRead(9);
-   while (mp3Busy == LOW){
-     mp3Busy = digitalRead(9);
-     printf("lecture dents 2\n");
-     delay(100);
-   }
-     printf("Sortie lecture dents 2\n");
-
-tft.init(76, 284);
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 4");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Lavage dents Haut");
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 50);
-  tft.print("Les dents du fond");
-  myDFPlayer.playFolder(3, 23);
-  delay(100);
-      mp3Busy = digitalRead(9);
-
-   while (mp3Busy == LOW){
-     mp3Busy = digitalRead(9);
-     printf("lecture\n");
-     delay(100);
-   }
-      printf("Sortie lecture\n");
-
-  tft.init(76, 284);
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 5");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Lavage dents");
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 50);
-  tft.print("Bas avant");
-  myDFPlayer.playFolder(3, 24);
-    delay(100);
-     mp3Busy = digitalRead(9);
-   while (mp3Busy == LOW){
-     mp3Busy = digitalRead(9);
-     printf("lecture dents 1\n");
-     delay(100);
-   }
-      printf("Sortie lecture dents 1\n");
-
-  myDFPlayer.playFolder(3, 20);
-  delay(100);
-     mp3Busy = digitalRead(9);
-   while (mp3Busy == LOW){
-     mp3Busy = digitalRead(9);
-     printf("lecture dents 2\n");
-     delay(100);
-   }
-     printf("Sortie lecture dents 2\n");
-
-  tft.init(76, 284);
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 6");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Lavage dents Bas");
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 50);
-  tft.print("Maintenant Derriere");
-  myDFPlayer.playFolder(3, 25);
-     delay(100);
-     mp3Busy = digitalRead(9);
-   while (mp3Busy == LOW){
-     mp3Busy = digitalRead(9);
-     printf("lecture dents 1\n");
-     delay(100);
-   }
-      printf("Sortie lecture dents 1\n");
-
-  myDFPlayer.playFolder(3, 20);
-  delay(100);
-     mp3Busy = digitalRead(9);
-   while (mp3Busy == LOW){
-     mp3Busy = digitalRead(9);
-     printf("lecture dents 2\n");
-     delay(100);
-   }
-     printf("Sortie lecture dents 2\n");
-
-tft.init(76, 284);
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 7");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Lavage dents Bas");
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 50);
-  tft.print("Les dents du fond");
-  myDFPlayer.playFolder(3, 23);
-  delay(100);
-      mp3Busy = digitalRead(9);
-   while (mp3Busy == LOW){
-     mp3Busy = digitalRead(9);
-     printf("lecture\n");
-     delay(100);
-   }
-      printf("Sortie lecture\n");
-
-ProgDents3();
-}
-
-void ProgDents3(){
-  int retour_choix = 0;
-while ( retour_choix != 1 ){
-  tft.init(76, 284); 
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 8");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Crache et");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 50);
-  tft.print("Rince ta Bouche");
-  myDFPlayer.playFolder(3, 3);
-  delay(20000);
-  retour_choix = choix();
-  }
-ProgDents4();
-}
-
-void ProgDents4(){
-  int retour_choix = 0;
-while ( retour_choix != 1 ){
-  tft.init(76, 284);
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 9");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Rince ta brosse");
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 50);
-  tft.print("a dents");
-  myDFPlayer.playFolder(3, 4);
-  delay(10000);
-  retour_choix = choix();
-  }
-ProgDents5();
-}
-
-
-
-void ProgDents5(){
-  int retour_choix = 0;
-while ( retour_choix != 1 ){
-  tft.init(76, 284); 
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("Etape 10");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Un gant mouille");
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 50);
-  tft.print("lave ton visage");
-  myDFPlayer.playFolder(3, 5); 
-  delay(30000);
+  lcd.clear();
+  lcd.backlight();         
+  lcd.setCursor(0, 0);            
+  lcd.print("Etape 7"); 
+  lcd.setCursor(4, 1);            
+  lcd.print("Mets ton bas");         
+  delay(120000);
   retour_choix = choix();
   }
 ProgFin();
 }
-
 
 void ProgFin(){
-  tft.init(76, 284); 
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("YOUPI !");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Tu as fini !");
-  myDFPlayer.playFolder(1, 3);  
-  delay(10000);
-  buttonrstate = 3;
-  buttonwstate = 3;
-  Menu1();
+  lcd.clear();
+  lcd.backlight();       
+  lcd.setCursor(0, 0);            
+  lcd.print("YOUPI"); 
+  lcd.setCursor(4, 1);            
+  lcd.print("Tu as fini !");         
+  while(1);
 }
 
 int choix(){
+  buttonw.loop();
+  buttonr.loop();
   buttonrstate = 3;
   buttonwstate = 3;
   int valeur_choix = 0 ;
-  tft.init(76, 284);
- 
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
-
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 10);
-  tft.print("As-tu Fini ?");
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(10, 30);
-  tft.print("Oui:Bl Non:Ro");
-  myDFPlayer.playFolder(1, 2);  //play specific mp3 in SD Folder Name(1~99); File Name(1~255)
-  delay(100);
-  mp3Busy = digitalRead(9);
-  while (mp3Busy == LOW){
-    mp3Busy = digitalRead(9);
-    printf("lecture\n");
-    delay(100);
-  }
-      printf("Sortie lecture\n");
+  lcd.backlight();
+  lcd.clear();          
+  lcd.setCursor(0, 0);            
+  lcd.print("As-tu Fini ?"); 
+  lcd.setCursor(0, 2);            
+  lcd.print("Oui:Bl Non:Ro");          
   while ((buttonrstate != 0 ) && (buttonwstate != 0)){
-  
-  myDFPlayer.playFolder(1, 1);
-  delay(2500);
+  lcd.backlight();
+  digitalWrite(BUZZ_PIN, HIGH);
+  delay(200);
+  digitalWrite(BUZZ_PIN, LOW);
+  delay(250);
+  digitalWrite(BUZZ_PIN, HIGH);
+  delay(75);
+  digitalWrite(BUZZ_PIN, LOW);
+  delay(750);
+  lcd.noBacklight();
+  delay (500);
+  buttonw.loop();
+  buttonr.loop();
+  buttonrstate = buttonr.getState();
+  buttonwstate = buttonw.getState();
   }
   
-  if(buttonwstate == 0){
+  if(buttonw.isPressed()){
    valeur_choix = 1 ;
   }
-  if(buttonrstate == 0){
+  if(buttonr.isPressed()){
    valeur_choix = 2 ;
   }
   return (valeur_choix);
+}
+
+void ProgSimple(){
+buttonw.loop();
+  buttonr.loop();
+  lcd.clear();
+  lcd.setCursor(0, 0);           
+  lcd.print("Eva ne te"); 
+  lcd.setCursor(4, 1);
+  lcd.print("Perd PAS !");
+  delay(5000);
+  lcd.noBacklight();
+  delay (60000);
+  
+  do {
+  lcd.backlight();
+  digitalWrite(BUZZ_PIN, HIGH);
+  delay(200);
+  buttonwstate = buttonw.getState();
+  digitalWrite(BUZZ_PIN, LOW);
+  delay(250);
+  buttonwstate = buttonw.getState();
+  digitalWrite(BUZZ_PIN, HIGH);
+  delay(75);
+  buttonwstate = buttonw.getState();
+  digitalWrite(BUZZ_PIN, LOW);
+  delay(750);
+  buttonwstate = buttonw.getState();
+  lcd.noBacklight();
+  delay (500);
+  buttonwstate = buttonw.getState();
+  }
+  while (buttonwstate == 1);
 }
